@@ -1,0 +1,17 @@
+# QLoRA fine-tune. Start with --pilot 500, compare to the untuned base on the same prompts.
+base_model: Qwen/Qwen2.5-Coder-7B-Instruct
+seed: 42
+output_dir: checkpoints/qwen25coder7b-qlora
+data:
+  spider_root: data/spider
+  bird_root: null        # set to data/bird once Spider results are in (phased schedule)
+  prune: true
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+train:
+  batch_size: 2
+  grad_accum: 8
+  lr: 2.0e-4
+  epochs: 2

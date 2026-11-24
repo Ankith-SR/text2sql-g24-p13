@@ -1,0 +1,9 @@
+# Fine-tuning only (install on the Sol cluster / a GPU box)
+-r requirements.txt
+torch
+transformers>=4.44
+datasets>=2.20
+peft>=0.12
+trl>=0.10
+bitsandbytes>=0.43
+accelerate>=0.33

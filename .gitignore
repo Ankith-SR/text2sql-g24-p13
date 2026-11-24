@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Secrets
+.env
+
+# Datasets (large; download with scripts/setup_data.sh)
+data/*
+!data/.gitkeep
+!data/README.md
+
+# Model weights / checkpoints / adapters
+checkpoints/
+*.safetensors
+*.bin
+*.gguf
+
+# Run outputs: keep the small summary files, ignore bulk predictions
+runs/*
+!runs/.gitkeep
+!runs/**/run_record.json
+!runs/**/metrics.json
+
+.DS_Store

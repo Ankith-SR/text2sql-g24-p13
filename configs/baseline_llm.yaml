@@ -1,0 +1,8 @@
+# Prompted-LLM baselines (Tier 3). backend: ollama (local / Sol) or voyager (ASU API).
+backend: ollama
+models:
+  - qwen2.5-coder:7b
+  - llama3.1:8b
+shots: 0            # run 0 and 3
+split: dev
+dataset: spider     # spider | bird
