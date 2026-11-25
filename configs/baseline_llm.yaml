@@ -1,8 +1,11 @@
-# Prompted-LLM baselines (Tier 3). backend: ollama (local / Sol) or voyager (ASU API).
+# Prompted-LLM baselines (Tier 3). backend: ollama (local / Sol), voyager (ASU API) or vllm.
+# Runs every model below. Few-shot: --set shots=3 (examples picked from the train split by
+# question similarity, DAIL-SQL style). Proposal asks for 0-shot and 3-shot.
 backend: ollama
 models:
   - qwen2.5-coder:7b
   - llama3.1:8b
-shots: 0            # run 0 and 3
+shots: 0
+prune: false        # baselines see the full schema
 split: dev
 dataset: spider     # spider | bird

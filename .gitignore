@@ -15,6 +15,7 @@ venv/
 data/*
 !data/.gitkeep
 !data/README.md
+!data/samples/
 
 # Model weights / checkpoints / adapters
 checkpoints/
@@ -23,7 +24,9 @@ checkpoints/
 *.gguf
 
 # Run outputs: keep the small summary files, ignore bulk predictions
-runs/*
+# (runs/** + !runs/**/ so git can re-include files inside run folders)
+runs/**
+!runs/**/
 !runs/.gitkeep
 !runs/**/run_record.json
 !runs/**/metrics.json

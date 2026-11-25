@@ -1,6 +1,9 @@
-# Full pipeline sweep. Ablations: toggle prune/vote/repair, sweep N and R.
-model: qwen2.5-coder:7b   # swap for the QLoRA-merged model once trained
+# Full pipeline. Ablations (scripts/run_ablations.py) toggle prune / vote / repair and sweep N, R.
+model: qwen2.5-coder:7b   # untuned base; configs/pipeline_qlora.yaml uses the fine-tuned adapter
 backend: ollama
+dataset: spider
+split: dev
+shots: 0
 prune: true
 values: false             # BIRD value retrieval
 n_candidates: 5           # N
