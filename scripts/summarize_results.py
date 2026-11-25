@@ -51,12 +51,13 @@ def main() -> None:
             "VES": f"{m['ves']:.3f}" if "ves" in m else "",
             "latency_s": f"{m.get('avg_latency_s', 0):.3f}",
             "model_calls": f"{m.get('avg_model_calls', 0):.2f}",
+            "logprob_cov": pct(m.get("logprob_coverage")),
         })
     if not rows:
         print("No runs/*/metrics.json found. Run scripts/run_eval.py first.")
         return
     # drop columns no run uses (e.g. BIRD columns when only Spider was run)
-    empty = [k for k in rows[0] if k.startswith(("EX_", "VES")) and not any(r[k] for r in rows)]
+    empty = [k for k in rows[0] if k.startswith(("EX_", "VES", "logprob")) and not any(r[k] for r in rows)]
     rows = [{k: v for k, v in r.items() if k not in empty} for r in rows]
     OUT.mkdir(exist_ok=True)
     with open(OUT / "results_summary.csv", "w", newline="") as f:
@@ -65,7 +66,7 @@ def main() -> None:
         w.writerows(rows)
     cols = list(rows[0])
     md = ["# Results summary", "",
-          "EX / validity / EX_* in %, VES (BIRD) as a ratio, latency in seconds per question.", "",
+          "EX / validity / EX_* / logprob_cov in %, VES (BIRD) as a ratio, latency in seconds per question.", "",
           "| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
     md += ["| " + " | ".join(str(r[c]) for c in cols) + " |" for r in rows]
     md += _selection_section()

@@ -98,6 +98,7 @@ def run_one(system: str, dataset: str, model: str | None, cfg: dict, limit: int 
     latencies: list[float] = []
     calls: list[int] = []
     decided = Counter()
+    lp_seen = [0, 0]  # [samples generated, samples that came with token logprobs]
     repairs = Counter()
 
     for ex in tqdm(examples, desc=f"{system}/{dataset}/{model or '-'}"):
@@ -118,7 +119,10 @@ def run_one(system: str, dataset: str, model: str | None, cfg: dict, limit: int 
                               shots.select(ex.question, k_shots) if shots else None)
 
         def gen(p, n, t):
-            return generate(client, model, p, n=n, temperature=t, stats=stats)
+            out = generate(client, model, p, n=n, temperature=t, stats=stats)
+            lp_seen[0] += len(out)
+            lp_seen[1] += sum(lp is not None for _, lp in out)
+            return out
 
         try:
             if system == "llm":
@@ -145,6 +149,9 @@ def run_one(system: str, dataset: str, model: str | None, cfg: dict, limit: int 
     metrics["avg_latency_s"] = sum(latencies) / len(latencies) if latencies else 0.0
     metrics["avg_model_calls"] = sum(calls) / len(calls) if calls else 0.0
     metrics["n_errors"] = sum(1 for d in details.values() if "error" in d)
+    if lp_seen[0]:
+        # tie-break rule 2 (confidence) only works if the backend returns logprobs
+        metrics["logprob_coverage"] = lp_seen[1] / lp_seen[0]
     if system == "pipeline":
         metrics["decided_by"] = dict(decided)
         metrics["repairs_used"] = {str(k): v for k, v in sorted(repairs.items())}

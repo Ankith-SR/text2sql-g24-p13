@@ -72,11 +72,29 @@ def _tok(s: str) -> list[str]:
 
 def extract_sql(text: str) -> str:
     text = re.sub(r"```(?:sql)?", "", text).strip()
-    m = re.search(r"\b(SELECT|WITH)\b", text, re.I)
-    if m and m.start() > 0:
-        text = text[m.start():]
-    text = text.split(";")[0].strip()
+    # Start at the first SELECT, or at a CTE ("WITH name AS (") if one comes first. A bare
+    # "with" is not enough: models often write prose like "Here is the query with a join:".
+    starts = [m.start() for m in (re.search(r"\bSELECT\b", text, re.I),
+                                  re.search(r"\bWITH\s+(?:RECURSIVE\s+)?\w+\s*(?:\([^)]*\)\s*)?AS\s*\(",
+                                            text, re.I)) if m]
+    if starts and min(starts) > 0:
+        text = text[min(starts):]
+    text = _first_statement(text).strip()
     return re.sub(r"\s+", " ", text)
+
+
+def _first_statement(text: str) -> str:
+    """Text up to the first ';' that is not inside a quoted string or identifier."""
+    quote = None
+    for i, ch in enumerate(text):
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "'\"`":
+            quote = ch
+        elif ch == ";":
+            return text[:i]
+    return text
 
 
 @dataclass
@@ -95,12 +113,18 @@ def _one_call(client: OpenAI, model: str, prompt: str, n: int, temperature: floa
     kwargs = dict(model=model, n=n, temperature=temperature, max_tokens=max_tokens,
                   messages=[{"role": "system", "content": SYSTEM},
                             {"role": "user", "content": prompt}])
-    if want_logprobs:
+    if want_logprobs and id(client) not in _NO_LOGPROBS:
         try:
             return client.chat.completions.create(logprobs=True, **kwargs)
         except Exception:  # noqa: BLE001  backend may reject logprobs; retry without
             pass
-    return client.chat.completions.create(**kwargs)
+    resp = client.chat.completions.create(**kwargs)
+    if want_logprobs:
+        _NO_LOGPROBS.add(id(client))  # remember, so later calls do not pay for a failed request
+    return resp
+
+
+_NO_LOGPROBS: set[int] = set()  # clients whose backend rejected logprobs=True
 
 
 def generate(client: OpenAI, model: str, prompt: str, n: int = 1,

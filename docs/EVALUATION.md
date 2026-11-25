@@ -18,6 +18,9 @@ Use `--limit K` for a smoke test; report final numbers on the same K for every s
 
 ## Metrics
 - **EX / validity / EX by difficulty / latency / model calls**: computed by `run_eval.py`.
+- **logprob_coverage**: share of sampled queries that came with token log-probs. Tie-break rule 2
+  (confidence) needs them; if this is 0 for a backend, rule 2 never fires there and ties fall
+  through to rule 3 (simplicity). Report it next to the `decided_by` counts.
   Difficulty uses `src/text2sql/evaluation/hardness.py`, a re-implementation of the official
   Spider hardness rules (no official parser needed).
 - **Exact-set match (EM) and test-suite accuracy**: official scripts.

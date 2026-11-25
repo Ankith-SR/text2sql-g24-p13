@@ -70,3 +70,65 @@ def test_bird_loader_keeps_difficulty(tmp_path):
                                              "evidence": "e", "difficulty": "moderate"}]))
     ex = load_bird(tmp_path, "dev")[0]
     assert ex.difficulty == "moderate" and ex.evidence == "e"
+
+
+def test_qlora_training_prompt_matches_inference(tmp_path):
+    from text2sql.baselines.llm_prompt import SYSTEM, build_prompt
+    from text2sql.data.schema import load_schemas
+    from text2sql.training.qlora_sft import build_sft_rows
+
+    tables = [{"db_id": "uni", "table_names_original": ["student"],
+               "column_names_original": [[-1, "*"], [0, "id"], [0, "name"]],
+               "column_types": ["text", "number", "text"], "primary_keys": [1], "foreign_keys": []}]
+    (tmp_path / "tables.json").write_text(json.dumps(tables))
+    (tmp_path / "train_spider.json").write_text(json.dumps(
+        [{"db_id": "uni", "question": "How many students?", "query": "SELECT count(*) FROM student"}]))
+    cfg = {"data": {"spider_root": str(tmp_path), "bird_root": None, "prune": False}}
+    row = build_sft_rows(cfg, None, 0)[0]["messages"]
+    sch = load_schemas(tmp_path / "tables.json")["uni"]
+    assert row[0]["content"] == SYSTEM
+    assert row[1]["content"] == build_prompt(sch.to_prompt(), "How many students?")
+
+
+def test_extract_sql_keeps_semicolon_inside_strings():
+    from text2sql.baselines.llm_prompt import extract_sql
+
+    assert extract_sql('SELECT a FROM t WHERE b = "x;y"; -- done') == 'SELECT a FROM t WHERE b = "x;y"'
+    assert extract_sql("```sql\nSELECT a\nFROM t;\n```") == "SELECT a FROM t"
+
+
+def test_extract_sql_ignores_english_with():
+    from text2sql.baselines.llm_prompt import extract_sql
+
+    assert extract_sql("Here is the query with a join:\nSELECT a FROM t JOIN u ON t.id = u.id") == \
+        "SELECT a FROM t JOIN u ON t.id = u.id"
+    assert extract_sql("Answer: WITH c AS (SELECT 1 AS x) SELECT x FROM c") == \
+        "WITH c AS (SELECT 1 AS x) SELECT x FROM c"
+
+
+def test_order_by_detection_tolerates_whitespace(toy_db):
+    from text2sql.evaluation.execution import execute, same_result
+
+    gold = "SELECT name FROM student ORDER\n  BY name DESC"
+    asc = execute(toy_db, "SELECT name FROM student ORDER BY name")
+    assert not same_result(asc, execute(toy_db, gold), gold)
+
+
+def test_logprobs_rejection_is_remembered():
+    from text2sql.baselines.llm_prompt import generate
+
+    class NoLogprobs:
+        def __init__(self):
+            self.requests = 0
+            self.chat = SimpleNamespace(completions=SimpleNamespace(create=self.create))
+
+        def create(self, **kw):
+            self.requests += 1
+            if kw.get("logprobs"):
+                raise ValueError("logprobs unsupported")
+            msg = SimpleNamespace(content="SELECT 1")
+            return SimpleNamespace(choices=[SimpleNamespace(message=msg, logprobs=None)])
+
+    c = NoLogprobs()
+    generate(c, "m", "p", n=3, temperature=0.7)
+    assert c.requests == 4  # one rejected logprobs request, then 3 plain ones

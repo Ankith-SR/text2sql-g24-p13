@@ -8,6 +8,7 @@ Difficulty levels for "EX by difficulty" come from evaluation/hardness.py.
 """
 from __future__ import annotations
 
+import re
 import sqlite3
 import time
 from collections import Counter
@@ -59,7 +60,7 @@ def result_key(rows: list[tuple], ordered: bool = False):
 def same_result(pred: ExecResult, gold: ExecResult, gold_sql: str) -> bool:
     if not (pred.ok and gold.ok):
         return False
-    ordered = "order by" in gold_sql.lower()
+    ordered = re.search(r"\border\s+by\b", gold_sql, re.I) is not None
     if ordered:
         return list(map(repr, pred.rows)) == list(map(repr, gold.rows))
     return result_key(pred.rows) == result_key(gold.rows)
