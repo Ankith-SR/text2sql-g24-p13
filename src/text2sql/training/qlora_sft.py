@@ -15,12 +15,14 @@ from pathlib import Path
 
 import yaml
 
+from text2sql.baselines.llm_prompt import SYSTEM, build_prompt
 from text2sql.data.loaders import load_bird, load_spider
 from text2sql.data.schema import load_schemas
 from text2sql.pruning.schema_pruning import prune
 from text2sql.utils.run_record import write_run_record
 
-SYSTEM = "Return exactly one SQLite query and nothing else."
+# Training uses exactly the system prompt and user prompt (build_prompt) used at inference, so
+# base vs. QLoRA is compared "on the same prompts" (proposal, Stage 3).
 
 
 def build_sft_rows(cfg: dict, pilot: int | None, seed: int) -> list[dict]:
@@ -30,7 +32,7 @@ def build_sft_rows(cfg: dict, pilot: int | None, seed: int) -> list[dict]:
     for ex in load_spider(spider_root, "train"):
         sch = schemas[ex.db_id]
         keep = prune(ex.question, sch) if cfg["data"].get("prune", True) else None
-        user = f"{sch.to_prompt(keep)}\n/* Question: {ex.question} */"
+        user = build_prompt(sch.to_prompt(keep), ex.question)
         rows.append({"messages": [
             {"role": "system", "content": SYSTEM},
             {"role": "user", "content": user},
@@ -42,7 +44,7 @@ def build_sft_rows(cfg: dict, pilot: int | None, seed: int) -> list[dict]:
         for ex in load_bird(bird_root, "train"):
             sch = bschemas[ex.db_id]
             keep = prune(ex.question, sch) if cfg["data"].get("prune", True) else None
-            user = f"{sch.to_prompt(keep)}\n/* Hint: {ex.evidence} */\n/* Question: {ex.question} */"
+            user = build_prompt(sch.to_prompt(keep), ex.question, ex.evidence)
             rows.append({"messages": [
                 {"role": "system", "content": SYSTEM},
                 {"role": "user", "content": user},

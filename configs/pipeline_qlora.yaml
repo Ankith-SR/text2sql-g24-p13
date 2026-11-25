@@ -1,0 +1,12 @@
+# Same pipeline, but the model is the QLoRA-tuned Qwen2.5-Coder-7B served by vLLM.
+# Start the server first (docs/QLORA_SERVING.md); "qlora" is the --lora-modules name.
+model: qlora
+backend: vllm
+dataset: spider
+split: dev
+shots: 0
+prune: true
+values: false
+n_candidates: 5
+max_repairs: 2
+temperature: 0.7

@@ -1,0 +1,10 @@
+# Upper reference: a larger open model through ASU Voyager (needs VOYAGER_API_KEY in .env).
+# Model names differ per deployment: run `python scripts/list_models.py --backend voyager`
+# and put the exact id of the largest open model below.
+backend: voyager
+models:
+  - REPLACE_WITH_VOYAGER_MODEL_ID
+shots: 0
+prune: false
+split: dev
+dataset: spider
