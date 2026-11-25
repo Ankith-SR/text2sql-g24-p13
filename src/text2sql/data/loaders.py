@@ -19,6 +19,7 @@ class Example:
     gold_sql: str
     db_path: str
     evidence: str = ""  # BIRD external-knowledge hint
+    difficulty: str = ""  # BIRD: simple / moderate / challenging (Spider: computed later)
 
 
 def load_spider(root: str | Path, split: str = "dev") -> list[Example]:
@@ -49,6 +50,7 @@ def load_bird(root: str | Path, split: str = "dev") -> list[Example]:
             gold_sql=r["SQL"],
             db_path=str(db_dir / r["db_id"] / f"{r['db_id']}.sqlite"),
             evidence=r.get("evidence", ""),
+            difficulty=r.get("difficulty", ""),
         )
         for i, r in enumerate(rows)
     ]

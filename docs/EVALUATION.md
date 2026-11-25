@@ -7,7 +7,7 @@ files (proposal, Section V). All numbers come from `scripts/run_eval.py`.
 | Tier | Command | Run name |
 |---|---|---|
 | 1 Heuristic | `python scripts/run_eval.py --system heuristic --dataset spider` | `heuristic-spider-none` |
-| 2 LGESQL | external repo, see `docs/LGESQL.md` | — |
+| 2 LGESQL | train in its own repo (`docs/LGESQL.md`), then `python scripts/score_preds.py --preds <file> --name lgesql --system lgesql` | `lgesql` |
 | 3 Prompted LLMs, 0-shot | `python scripts/run_eval.py --system llm --config configs/baseline_llm.yaml` | `llm-spider-<model>` |
 | 3 Prompted LLMs, 3-shot | add `--set shots=3` | `llm-spider-<model>-3shot` |
 | 3 Larger model (Voyager) | `--config configs/baseline_voyager.yaml` | `llm-spider-<model>` |
@@ -30,7 +30,8 @@ Use `--limit K` for a smoke test; report final numbers on the same K for every s
   ```
   For test-suite accuracy, download the test-suite databases from that repo's README and pass
   their folder as `--db`. Save the printed table to `evaluations/official/<run>.txt`.
-- **VES (BIRD)**: not implemented yet; use BIRD's official evaluation script if BIRD is run.
+- **VES (BIRD)**: computed automatically for `--dataset bird` (mean of 1[correct]·sqrt(t_gold/t_pred), median of 3 timings). The official script repeats more and drops outliers, so cross-check the final number with it.
+- **BIRD difficulty**: BIRD's own simple / moderate / challenging labels from `dev.json`.
 
 ## Ablations (`scripts/run_ablations.py`)
 | Name | Change vs. full pipeline | Question it answers |

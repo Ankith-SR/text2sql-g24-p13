@@ -44,7 +44,7 @@ from text2sql.utils.run_record import write_run_record  # noqa: E402
 
 def parse_overrides(pairs: list[str]) -> dict:
     out = {}
-    for p in pairs:
+    for p in (tok for item in pairs for tok in item.split()):  # also accept "a=1 b=2" in one arg
         k, _, v = p.partition("=")
         out[k.strip()] = yaml.safe_load(v)  # "3" -> 3, "false" -> False, "0.7" -> 0.7
     return out
@@ -55,6 +55,21 @@ def load_split(dataset: str, split: str):
     if dataset == "spider":
         return load_spider(root, split), load_schemas(root / "tables.json")
     return load_bird(root, split), load_schemas(root / split / f"{split}_tables.json")
+
+
+def difficulty_of(examples, dataset: str) -> dict[str, str]:
+    """Spider: easy/medium/hard/extra from the gold SQL. BIRD: its own simple/moderate/challenging."""
+    if dataset == "spider":
+        return {ex.qid: hardness(ex.gold_sql) for ex in examples}
+    return {ex.qid: ex.difficulty for ex in examples if getattr(ex, "difficulty", "")}
+
+
+def score(preds: dict[str, str], examples, dataset: str) -> dict:
+    difficulty = difficulty_of(examples, dataset)
+    metrics = evaluate(preds, examples, difficulty, ves=(dataset == "bird"))
+    if difficulty:
+        metrics["n_by_difficulty"] = dict(Counter(d for q, d in difficulty.items() if q in preds))
+    return metrics
 
 
 def shot_selector(dataset: str, k: int) -> ShotSelector | None:
@@ -126,10 +141,7 @@ def run_one(system: str, dataset: str, model: str | None, cfg: dict, limit: int 
         latencies.append(time.perf_counter() - t0)
         calls.append(stats.calls)
 
-    difficulty = {ex.qid: hardness(ex.gold_sql) for ex in examples} if dataset == "spider" else None
-    metrics = evaluate(preds, examples, difficulty)
-    if difficulty:
-        metrics["n_by_difficulty"] = dict(Counter(difficulty.values()))
+    metrics = score(preds, examples, dataset)
     metrics["avg_latency_s"] = sum(latencies) / len(latencies) if latencies else 0.0
     metrics["avg_model_calls"] = sum(calls) / len(calls) if calls else 0.0
     metrics["n_errors"] = sum(1 for d in details.values() if "error" in d)

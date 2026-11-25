@@ -112,9 +112,17 @@ def generate(client: OpenAI, model: str, prompt: str, n: int = 1,
     keep calling until we have n samples, so N-candidate voting really gets N candidates.
     """
     out: list[tuple[str, float | None]] = []
+    ask_many = True
     while len(out) < n:
         t0 = time.perf_counter()
-        resp = _one_call(client, model, prompt, n - len(out), temperature, max_tokens, True)
+        k = n - len(out) if ask_many else 1
+        try:
+            resp = _one_call(client, model, prompt, k, temperature, max_tokens, True)
+        except Exception:
+            if k == 1:
+                raise
+            ask_many = False  # backend rejects n > 1: one sample per call from now on
+            continue
         dt = time.perf_counter() - t0
         if stats is not None:
             stats.calls += 1

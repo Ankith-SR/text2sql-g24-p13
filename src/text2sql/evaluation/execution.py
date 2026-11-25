@@ -65,9 +65,27 @@ def same_result(pred: ExecResult, gold: ExecResult, gold_sql: str) -> bool:
     return result_key(pred.rows) == result_key(gold.rows)
 
 
-def evaluate(preds: dict[str, str], examples, difficulty: dict[str, str] | None = None) -> dict:
-    """preds: {qid: sql}. difficulty: optional {qid: easy|medium|hard|extra}."""
+def _timed(db_path: str, sql: str, reps: int) -> float:
+    """Median wall time of `reps` executions (seconds)."""
+    times = []
+    for _ in range(reps):
+        t0 = time.perf_counter()
+        execute(db_path, sql)
+        times.append(time.perf_counter() - t0)
+    return sorted(times)[len(times) // 2]
+
+
+def evaluate(preds: dict[str, str], examples, difficulty: dict[str, str] | None = None,
+             ves: bool = False, ves_reps: int = 3) -> dict:
+    """preds: {qid: sql}. difficulty: optional {qid: level}.
+
+    ves=True adds BIRD's Valid Efficiency Score: mean over all questions of
+    1[correct] * sqrt(time_gold / time_pred). Like the official script it rewards correct
+    queries that run faster than the gold query; we take the median of `ves_reps` runs
+    (the official script uses more repetitions and drops outliers, so treat it as approximate).
+    """
     n = ok_cnt = valid_cnt = 0
+    ves_sum = 0.0
     by_diff: dict[str, list[int]] = {}
     for ex in examples:
         if ex.qid not in preds:
@@ -78,11 +96,18 @@ def evaluate(preds: dict[str, str], examples, difficulty: dict[str, str] | None 
         valid_cnt += pred.ok
         hit = same_result(pred, gold, ex.gold_sql)
         ok_cnt += hit
+        if ves and hit:
+            t_pred = _timed(ex.db_path, preds[ex.qid], ves_reps)
+            t_gold = _timed(ex.db_path, ex.gold_sql, ves_reps)
+            ves_sum += (t_gold / max(t_pred, 1e-9)) ** 0.5
         if difficulty and ex.qid in difficulty:
             by_diff.setdefault(difficulty[ex.qid], []).append(int(hit))
-    return {
+    out = {
         "n": n,
         "execution_accuracy": ok_cnt / n if n else 0.0,
         "validity_rate": valid_cnt / n if n else 0.0,
         "ex_by_difficulty": {k: sum(v) / len(v) for k, v in by_diff.items()},
     }
+    if ves:
+        out["ves"] = ves_sum / n if n else 0.0
+    return out

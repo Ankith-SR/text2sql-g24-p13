@@ -6,12 +6,12 @@
    python -m text2sql.training.qlora_sft --config configs/qlora.yaml --pilot 500   # pilot first
    python -m text2sql.training.qlora_sft --config configs/qlora.yaml               # full run
    ```
-   The adapter is saved under `checkpoints/qwen25coder7b-qlora/{pilot,full}` (git-ignored).
+   The adapter is saved to `checkpoints/qwen25coder7b-qlora/{pilot,full}/adapter` (git-ignored).
 2. Serve base model + adapter with vLLM's OpenAI-compatible server (same GPU node):
    ```bash
    pip install vllm
    vllm serve Qwen/Qwen2.5-Coder-7B-Instruct --enable-lora \
-       --lora-modules qlora=checkpoints/qwen25coder7b-qlora/full --max-lora-rank 16 --port 8000
+       --lora-modules qlora=checkpoints/qwen25coder7b-qlora/full/adapter --max-lora-rank 16 --port 8000
    ```
 3. Point the repo at it (`.env`: `VLLM_BASE_URL=http://<node>:8000/v1`) and run
    ```bash

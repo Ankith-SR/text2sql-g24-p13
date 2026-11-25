@@ -10,6 +10,7 @@ from run_eval import parse_overrides  # noqa: E402
 def test_parse_overrides_types():
     assert parse_overrides(["shots=3", "prune=false", "temperature=0.5", "model=llama3.1:8b"]) == {
         "shots": 3, "prune": False, "temperature": 0.5, "model": "llama3.1:8b"}
+    assert parse_overrides(["n_candidates=1 max_repairs=0"]) == {"n_candidates": 1, "max_repairs": 0}
 
 
 def test_toy_db_questions_execute():
