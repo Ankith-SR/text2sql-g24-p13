@@ -36,3 +36,16 @@ def test_prune_keeps_relevant_table_and_pk(tmp_path):
     s = _schema(tmp_path)
     keep = prune("list student names", s, top_tables=1)
     assert "student" in keep and "id" in keep["student"] and "course" not in keep
+
+
+def test_prune_keeps_unmentioned_columns_of_narrow_tables(tmp_path):
+    # "cs students" names a value, not the dept_name column; it must survive pruning.
+    s = _schema(tmp_path)
+    keep = prune("list cs students", s, top_tables=1)
+    assert keep["student"] == {"id", "name", "dept_name"}
+
+
+def test_prune_cuts_wide_tables(tmp_path):
+    s = _schema(tmp_path)
+    keep = prune("list student names", s, top_tables=1, max_cols=2)
+    assert "name" in keep["student"] and "id" in keep["student"] and "dept_name" not in keep["student"]

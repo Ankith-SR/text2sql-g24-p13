@@ -27,8 +27,13 @@ def rank_items(question: str, schema: Schema) -> list[tuple[float, str, str]]:
     return sorted(((float(s), t, c) for s, (t, c) in zip(scores, items)), reverse=True)
 
 
-def prune(question: str, schema: Schema, top_tables: int = 4, top_cols: int = 6) -> dict[str, set[str]]:
-    """Keep top tables, always keep primary keys and FK columns so joins stay possible."""
+def prune(question: str, schema: Schema, top_tables: int = 4, max_cols: int = 20) -> dict[str, set[str]]:
+    """Keep the top tables, all their columns (only tables wider than `max_cols` are cut to
+    their best-scoring columns), plus primary keys and FK columns so joins stay possible.
+
+    Column-level BM25 is unreliable: a question names values, not columns ("singers from
+    France" never mentions `country`), so cutting narrow tables dropped needed columns.
+    """
     ranked = rank_items(question, schema)
     tables: list[str] = []
     for _, t, _ in ranked:
@@ -36,11 +41,14 @@ def prune(question: str, schema: Schema, top_tables: int = 4, top_cols: int = 6)
             tables.append(t)
         if len(tables) == top_tables:
             break
-    keep: dict[str, set[str]] = {t: set() for t in tables}
-    for _, t, c in ranked:
-        if t in keep and len(keep[t]) < top_cols:
-            keep[t].add(c)
     by_name = {t.name: t for t in schema.tables}
+    keep: dict[str, set[str]] = {}
+    for t in tables:
+        cols = by_name[t].columns
+        keep[t] = set(cols) if len(cols) <= max_cols else set()
+    for _, t, c in ranked:  # wide tables only: best-scoring columns first
+        if t in keep and len(by_name[t].columns) > max_cols and len(keep[t]) < max_cols:
+            keep[t].add(c)
     for t in tables:
         keep[t].update(by_name[t].primary_keys)
     for tbl, col, rt, rc in schema.foreign_keys:
