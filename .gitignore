@@ -32,3 +32,6 @@ runs/**
 !runs/**/metrics.json
 
 .DS_Store
+
+# Slurm / vLLM job logs
+logs/
