@@ -1,0 +1,33 @@
+{
+  "n": 1034,
+  "execution_accuracy": 0.7611218568665378,
+  "validity_rate": 0.9845261121856866,
+  "ex_by_difficulty": {
+    "easy": 0.8991935483870968,
+    "medium": 0.7635135135135135,
+    "hard": 0.7593582887700535,
+    "extra": 0.535483870967742
+  },
+  "n_by_difficulty": {
+    "easy": 248,
+    "medium": 444,
+    "hard": 187,
+    "extra": 155
+  },
+  "avg_latency_s": 0.7987226488990115,
+  "avg_model_calls": 2.1798839458413926,
+  "n_errors": 0,
+  "logprob_coverage": 1.0,
+  "decided_by": {
+    "unique": 942,
+    "all_empty": 62,
+    "confidence": 6,
+    "all_failed": 16,
+    "non_empty": 8
+  },
+  "repairs_used": {
+    "0": 937,
+    "1": 8,
+    "2": 89
+  }
+}

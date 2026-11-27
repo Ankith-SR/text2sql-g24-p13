@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-11-26 08:53:43",
+  "git_sha": "479002f",
+  "python": "3.12.15",
+  "machine": "sc032",
+  "gpu": "none",
+  "config": {
+    "backend": "voyager",
+    "shots": 0,
+    "prune": false,
+    "split": "dev",
+    "dataset": "spider",
+    "system": "llm",
+    "model": "qwen3-coder-30b-a3b-instruct",
+    "limit": null
+  },
+  "metrics": {
+    "n": 1034,
+    "execution_accuracy": 0.7978723404255319,
+    "validity_rate": 0.9912959381044487,
+    "ex_by_difficulty": {
+      "easy": 0.9233870967741935,
+      "medium": 0.8175675675675675,
+      "hard": 0.7647058823529411,
+      "extra": 0.5806451612903226
+    },
+    "n_by_difficulty": {
+      "easy": 248,
+      "medium": 444,
+      "hard": 187,
+      "extra": 155
+    },
+    "avg_latency_s": 0.8013840544562628,
+    "avg_model_calls": 1.0,
+    "n_errors": 0,
+    "logprob_coverage": 1.0
+  }
+}

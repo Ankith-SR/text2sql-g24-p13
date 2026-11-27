@@ -1,0 +1,21 @@
+{
+  "n": 1034,
+  "execution_accuracy": 0.7350096711798839,
+  "validity_rate": 0.9777562862669246,
+  "ex_by_difficulty": {
+    "easy": 0.8991935483870968,
+    "medium": 0.7432432432432432,
+    "hard": 0.6577540106951871,
+    "extra": 0.5419354838709678
+  },
+  "n_by_difficulty": {
+    "easy": 248,
+    "medium": 444,
+    "hard": 187,
+    "extra": 155
+  },
+  "avg_latency_s": 0.605269835558873,
+  "avg_model_calls": 1.0,
+  "n_errors": 0,
+  "logprob_coverage": 1.0
+}

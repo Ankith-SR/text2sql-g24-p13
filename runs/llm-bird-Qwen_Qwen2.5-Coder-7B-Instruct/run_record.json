@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-11-26 10:06:10",
+  "git_sha": "479002f",
+  "python": "3.12.15",
+  "machine": "sg005",
+  "gpu": "NVIDIA A100-SXM4-80GB",
+  "config": {
+    "backend": "vllm",
+    "shots": 0,
+    "prune": false,
+    "split": "dev",
+    "dataset": "bird",
+    "system": "llm",
+    "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "limit": null
+  },
+  "metrics": {
+    "n": 1534,
+    "execution_accuracy": 0.45632333767926986,
+    "validity_rate": 0.8741851368970013,
+    "ex_by_difficulty": {
+      "simple": 0.5405405405405406,
+      "moderate": 0.3448275862068966,
+      "challenging": 0.27586206896551724
+    },
+    "ves": 0.48031100779081776,
+    "n_by_difficulty": {
+      "simple": 925,
+      "moderate": 464,
+      "challenging": 145
+    },
+    "avg_latency_s": 0.5403494272697377,
+    "avg_model_calls": 1.0,
+    "n_errors": 0,
+    "logprob_coverage": 1.0
+  }
+}
